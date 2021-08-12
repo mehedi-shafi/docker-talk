@@ -1,0 +1,54 @@
+version: '2'
+
+services:
+    nginx: 
+        restart: unless-stopped
+        build:
+            context: .
+            dockerfile: ./front-end/Dockerfile
+        ports:
+            - 80:80
+        volumes:
+            - static_volume:/app/api/django_static
+            - ./nginx/:/etc/nginx/conf.d
+        depends_on: 
+            - backend
+
+    backend:
+        restart: unless-stopped
+        build:
+            context: .
+            dockerfile: ./api/Dockerfile
+        volumes:
+            
+        entrypoint: /app/api/entrypoint.sh
+        volumes:
+            - static_volume:/app/backend/server/django_static
+        expose:
+            - 8000
+          
+        depends_on:
+          - db
+      
+    db:
+      restart: unless-stopped
+      image: postgres:10-alpine
+      expose:
+        - 5432
+      volumes:
+        - static_volume:/var/lib/postgresql/data
+
+      environment:
+        - POSTGRES_PASSWORD=cowabanga
+        - POSTGRES_USER=postgres
+        - APP_DB_NAME=birthday
+        - APP_DB_USER=birthday
+        - APP_DB_PASS=simpletone
+
+      volumes:
+        - ./db:/docke-entrypoint-initdb.d/
+
+
+
+volumes:
+    static_volume: {}
